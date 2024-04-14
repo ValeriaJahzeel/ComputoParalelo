@@ -8,3 +8,7 @@ Una función lambda es una manera corta de expresar funciones que solo se realiz
 
 ## Suma de Rienman paralela
 
+## Serie de Madhuahua Leibniz con exclusión mutua
+Busca aproximar el valor de la raiz cuadrada de 2 sumando las fracciones de 1/numero impar tomando un cierto número de pasos,
+se realiza la nivelación de cargas y posteriormente se realiza el proceso utilizado la exclusión mutua.
+
