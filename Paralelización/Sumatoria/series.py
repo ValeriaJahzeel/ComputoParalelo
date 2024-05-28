@@ -5,6 +5,8 @@ import multiprocessing
 from multiprocessing import Pool
 import time
 
+import torch
+
 # variables
 cant_valores = 1000     # pasos
 num_procesadores = 4
@@ -51,7 +53,6 @@ def suma2(carga,lock,results):
      # sum(carga)
      lock.release()
      
-
 results = multiprocessing.Manager().list()
 lock=multiprocessing.Lock()
 res = []
@@ -72,3 +73,10 @@ finish_time = time.perf_counter()
 print(f"Program finished in {finish_time-start_time} seconds")
 print("Suma total -> ", sum(results) +1 )
 print(res)
+
+def run():
+    torch.multiprocessing.freeze_support()
+    print('loop')
+
+if __name__ == '__main__':
+    run()
