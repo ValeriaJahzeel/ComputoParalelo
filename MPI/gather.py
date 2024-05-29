@@ -45,8 +45,23 @@ else:
 
 # 2) Luego se realiza el procesamiento
 if rank==0:
-     gather = np.concatenate(np.mean(own_data))
-     print(gather)
+     print(np.mean(own_data))
 else:
-     gather = np.concatenate(np.mean(own_data))
-     print(gather)
+     print(np.mean(own_data))
+     
+def gatter(own_data):
+     own_data = nivelacion_cargas(data, size)[0]
+     received_data = [own_data]
+     for i in range(1, size):
+          received_data.append(comm.recv(source=i))
+
+     # Reunir todos los datos en el proceso raíz
+     gathered_data = np.concatenate(received_data)
+     
+     print("Media de los datos recolectados:", np.mean(gathered_data))
+
+# 1) Cada proceso envía sus datos al proceso raíz
+if rank != 0:
+     comm.send(nivelacion_cargas(data, size)[rank], dest=0)
+else:
+     gatter(own_data)
