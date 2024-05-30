@@ -20,18 +20,27 @@ def nivelacion_cargas(valores, procesadores):
         li = ls
     return final
 
-data = np.arange(100000)
+# data = np.arange(100000)
+
+matriz1 = [[1, 1, 1],[1, 1, 1],[1, 1, 1]]
+matriz1 = np.flatten(matriz1)
+
+matriz2 = [[1, 1, 1],[1, 1, 1],[1, 1, 1]]
+matriz2 = np.flatten(matriz2)
 
 comm = MPI.COMM_WORLD
 size = comm.Get_size()
 rank = comm.Get_rank()
 
-def scatter(data):
-    data = nivelacion_cargas(data, size)     # Balanceo de cargas
+def scatter(data1, data2):
+    matriz1 = nivelacion_cargas(data1, size)     # Balanceo de cargas
+    matriz2 = nivelacion_cargas(data2, size)     # Balanceo de cargas
+    
     if rank == 0:   
         for i in range(1, size):   # Envia los datos a los procesos
-            comm.send(data[i], dest=i) 
-        return data[0]
+            comm.send(data1[i], dest=i) 
+            comm.send(data2[i], dest=i) 
+        return data1[0], data2[0]
     else:
         return comm.recv(source=0) # Recibe los datos
 
@@ -46,14 +55,14 @@ def gather(own_data):
         comm.send(own_data, dest=0)     # Enviar los datos
 
 # 1) Se envían y reciben los datos
-own_data = scatter(data)
+own_data = scatter(matriz1, matriz2)
 
 # 2) Media con sactter
-print(f"Scatter -> {np.mean(own_data)}")
+print(f"Scatter -> {np.sum(own_data)}")
 
 # 3) Se reunen los datos 
 gathered_data = gather(own_data)
 
 # 4) Media con gather
 if rank == 0:
-    print("Gather -> ", np.mean(gathered_data))
+    print("Gather -> ", np.sum(gathered_data))
