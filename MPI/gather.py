@@ -2,26 +2,23 @@ from mpi4py import MPI
 import numpy as np
 import math
 
-
-# se define el método para balanceo de cargas
+# Método para balanceo de cargas
 def nivelacion_cargas(valores, procesadores):
-     mod = len(valores) % procesadores  # por si sobran valores
-     ind = math.floor(len(valores)/procesadores )   # para saber cuantos le toca a cada uno
-     final = []    # para guardar las particiones
+    mod = len(valores) % procesadores  # Por si sobran valores
+    ind = math.floor(len(valores) / procesadores)  # Para saber cuántos le toca a cada uno
+    final = []  # Para guardar las particiones
 
-     # inicializar los limites inferiores y superiores
-     li = 0
-     ls = ind
+    # Inicializar los límites inferiores y superiores
+    li = 0
+    ls = ind
 
-     print(mod, ind)
-
-     for i in range(procesadores):      # para un tiempo O(procesadores)
-          ls = li+ind
-          if i < mod:    # para repartir los valores que sobran
-               ls += 1
-          final.append(valores[li:ls])
-          li = ls
-     return final
+    for i in range(procesadores):  # Para un tiempo O(procesadores)
+        ls = li + ind
+        if i < mod:  # Para repartir los valores que sobran
+            ls += 1
+        final.append(valores[li:ls])
+        li = ls
+    return final
 
 data = np.arange(100000)
 
@@ -29,39 +26,35 @@ comm = MPI.COMM_WORLD
 size = comm.Get_size()
 rank = comm.Get_rank()
 
-own_data = np.empty_like(np.ones(shape=(len(nivelacion_cargas( data, size)[rank]),)), dtype='i')
-
+# Scatter los datos a los diferentes procesos
 def scatter(data):
-     data = nivelacion_cargas(data, size)
-     for i in range(1,size):
-          comm.send(data[i], dest=i)
-     return data[0]
+    data = nivelacion_cargas(data, size)
+    if rank == 0:
+        for i in range(1, size):
+            comm.send(data[i], dest=i)
+        return data[0]
+    else:
+        return comm.recv(source=0)
 
-# 1) Primero se envian y reciben los datos
-if rank==0:
-     own_data = scatter(data)
-else:
-     own_data = comm.recv(source=0)
+# Gather los datos desde los diferentes procesos
+def gather(own_data):
+    if rank == 0:
+        gathered_data = [own_data]
+        for i in range(1, size):
+            gathered_data.append(comm.recv(source=i))
+        gathered_data = np.concatenate(gathered_data)
+        return gathered_data
+    else:
+        comm.send(own_data, dest=0)
 
-# 2) Luego se realiza el procesamiento
-if rank==0:
-     print(np.mean(own_data))
-else:
-     print(np.mean(own_data))
-     
-def gatter(own_data):
-     own_data = nivelacion_cargas(data, size)[0]
-     received_data = [own_data]
-     for i in range(1, size):
-          received_data.append(comm.recv(source=i))
+# 1) Scatter: Primero se envían y reciben los datos
+own_data = scatter(data)
 
-     # Reunir todos los datos en el proceso raíz
-     gathered_data = np.concatenate(received_data)
-     
-     print("Media de los datos recolectados:", np.mean(gathered_data))
+# 2) Procesar los datos
+print(f"Rank {rank}: Media de los datos locales: {np.mean(own_data)}")
 
-# 1) Cada proceso envía sus datos al proceso raíz
-if rank != 0:
-     comm.send(nivelacion_cargas(data, size)[rank], dest=0)
-else:
-     gatter(own_data)
+# 3) Gather: Reunir los datos en el proceso raíz
+gathered_data = gather(own_data)
+
+if rank == 0:
+    print("Media de todos los datos recolectados:", np.mean(gathered_data))
