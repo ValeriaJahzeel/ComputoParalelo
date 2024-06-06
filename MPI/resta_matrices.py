@@ -58,7 +58,7 @@ def gather(own_data):
 own_data = scatter(matriz1, matriz2)
 
 # 2) Media con sactter
-print(f"Scatter -> {np.sum(own_data)}")
+print(f"Scatter -> {np.r(own_data)}")
 
 # 3) Se reunen los datos 
 gathered_data = gather(own_data)
