@@ -32,11 +32,11 @@ servidor.listen()
 
 print("Esperando al cliente...")
 
-conn, direccion = servidor.accept()
-print("Conectado al cliente")
-    
 while True:
-    datos = conn.recv(1024)
+    sockett, direccion = servidor.accept()
+    print("Conectado al cliente")
+    
+    datos = sockett.recv(1024)
 
     # recibe los datos
     caracteristicas = pickle.loads(datos)
@@ -47,6 +47,6 @@ while True:
     clase = iris.target_names[prediccion][0]
     print(f"Predicción: {clase}")
 
-    conn.sendall(clase.encode('utf-8'))
+    sockett.sendall(clase.encode('utf-8'))
 
-    conn.close()
+    sockett.close()
